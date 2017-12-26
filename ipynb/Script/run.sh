@@ -1,0 +1,20 @@
+
+
+
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseA_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD04_ARTConstructive/art_pcdcons4_cv_ClasseA_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseB_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD04_ARTConstructive/art_pcdcons4_cv_ClasseB_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseC_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD04_ARTConstructive/art_pcdcons4_cv_ClasseC_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseD_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD04_ARTConstructive/art_pcdcons4_cv_ClasseD_fromMat_1024nfft.jbl'
+
+
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseA_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD10_ARTConstructive/art_pcdcons10_cv_ClasseA_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseB_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD10_ARTConstructive/art_pcdcons10_cv_ClasseB_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseC_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD10_ARTConstructive/art_pcdcons10_cv_ClasseC_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseD_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD10_ARTConstructive/art_pcdcons10_cv_ClasseD_fromMat_1024nfft.jbl'
+
+
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseA_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD18_ARTConstructive/art_pcdcons18_cv_ClasseA_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseB_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD18_ARTConstructive/art_pcdcons18_cv_ClasseB_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseC_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD18_ARTConstructive/art_pcdcons18_cv_ClasseC_fromMat_1024nfft.jbl'
+python pcdind_art_recoloring.py '/results/classification/novelty/PCD_Constructive/pcdcons_cv_ClasseD_fromMat_1024nfft.jbl' '/results/classification/novelty/PCD18_ARTConstructive/art_pcdcons18_cv_ClasseD_fromMat_1024nfft.jbl'
+
