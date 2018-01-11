@@ -1,3 +1,7 @@
+import os
+
+os.environ['KERAS_BACKEND'] = 'theano'
+
 from keras import models
 from keras import layers
 from keras import optimizers
