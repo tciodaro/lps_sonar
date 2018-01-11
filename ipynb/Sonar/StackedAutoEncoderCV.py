@@ -11,7 +11,7 @@ from Sonar import StackedAutoEncoder as SAE
 
 class StackedAutoEncoderCV(object):
     
-    def __init__(self, grid_params, nfolds=5, random_seed = None, verbose = False):
+    def __init__(self, grid_params, nfolds=5,njobs = 1, random_seed = None, verbose = False):
         self.grid_params = grid_params
         self.network = None
         self.grid  = None
@@ -21,6 +21,9 @@ class StackedAutoEncoderCV(object):
         self.random_seed = random_seed
         self.cv_indexes = []
         self.scaler = None
+        self.njobs = njobs
+        self.mean_score = 1e9
+        self.std_score = 1e9
            
     
     """
@@ -42,7 +45,8 @@ class StackedAutoEncoderCV(object):
                                               ('network',SAE.StackedAutoEncoder(verbose=False))])
 
         params = dict([('network__' + k, v) for k,v in self.grid_params.items()])
-        self.grid = model_selection.GridSearchCV(clf, param_grid=params, cv=kfold, refit=False, n_jobs=2)
+        self.grid = model_selection.GridSearchCV(clf, param_grid=params, cv=kfold,
+                                                 refit=False, n_jobs=self.njobs)
         self.grid.fit(data, target)
         # Find the best CV
         icv = -1
@@ -63,21 +67,22 @@ class StackedAutoEncoderCV(object):
         self.grid.best_params_ = dict([(k.replace('network__',''), v) for k,v in self.grid.best_params_.items()])
         self.network = SAE.StackedAutoEncoder(**self.grid.best_params_)
         self.network.fit(data[self.cv_indexes[icv]['itrn']], target[self.cv_indexes[icv]['itrn']])
+        self.mean_score = self.grid.cv_results_['mean_test_score'][self.grid.best_index_]
+        self.std_score = self.grid.cv_results_['std_test_score'][self.grid.best_index_]
         print 'Total time: ', time.time()-t0
-        print 'Result: %.3f +- %.3f'%(self.grid.cv_results_['mean_test_score'][self.grid.best_index_],
-                                      self.grid.cv_results_['std_test_score'][self.grid.best_index_])
+        print 'Result: %.3f +- %.3f'%(self.mean_score,self.std_score)
         
 
         
     def encode(self, data):
-        return self.network.get_encoder().predict(data)
+        return self.network.get_encoder().predict(self.scaler.transform(data))
     
     def predict(self, data):
-        return self.network.get_model().predict(data)
+        return self.network.get_auto_encoder().predict(self.scaler.transform(data))
     
     def score(self, data, target = None):
         Y = self.predict(data)
-        return -metrics.mean_squared_error(Y, data)
+        return -self.network(Y, data)
     
     def get_network(self):
         return self.network

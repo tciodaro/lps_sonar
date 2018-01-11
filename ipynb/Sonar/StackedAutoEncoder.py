@@ -123,6 +123,9 @@ class StackedAutoEncoder(object):
     def score(self, data, target = None):
         Y = self.predict(data)
         return -metrics.mean_squared_error(Y, data)
+
+    def metric_score(self, X, Y):
+        return metrics.mean_squared_error(Y, X)
     
     def get_params(self, deep=True):        
         return {'hiddens': self.hiddens,
