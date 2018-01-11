@@ -13,7 +13,7 @@ from sklearn import metrics
 
 class StackedAutoEncoder(object):
     
-    def __init__(self, hiddens, optimizers, nepochs = 500, batch_size=100, ninit = 10, verbose=False):
+    def __init__(self, hiddens = [], optimizers = [], nepochs = 500, batch_size=100, ninit = 10, verbose=False):
         self.hiddens = hiddens
         self.optimizers = optimizers
         self.nepochs = nepochs

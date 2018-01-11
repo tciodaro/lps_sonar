@@ -11,9 +11,43 @@ np.set_printoptions(3)
 
 sys.path.append('../')
 
-from Sonar import StackedAutoEncoder as SAE
+from Sonar import StackedAutoEncoderCV as SAE
 
 if __name__ == '__main__':
+    ########################################### LOAD DATA
+    dataset = datasets.load_iris()
+    data = dataset.data
+    target = dataset.target
+
+    ########################################### SELECT ONE CLASS
+    knowncls = 1
+    data   = data[target == knowncls]
+    target = target[target == knowncls]
+    nclasses = np.unique(target).shape[0]
+
+    ########################################### TRAINING INDEXES
+    
+    # Test x Development
+    ntrn = 0.7
+    Xtrn, Xtst, Ytrn, Ytst = model_selection.train_test_split(data, target, test_size = 1.0-ntrn, stratify=target)
+    
+    
+    ########################################## GRID-SEARCH
+    param_grid = {
+        'hiddens': [[Xtrn.shape[1], 10, 5, 2, 5, 10, Xtrn.shape[1]],
+                             [Xtrn.shape[1], 10, 5, 1, 5, 10, Xtrn.shape[1]]],
+        'optimizers': [['adam','adam','adam']],
+        'nepochs': [500],
+        'batch_size': [100],
+        'ninit': [1]
+    }
+    cvmodel = SAE.StackedAutoEncoderCV(param_grid, 4, 10)
+    cvmodel.fit(Xtrn, Ytrn, nclasses)
+
+
+
+
+if __name__ == 'old':
     ########################################### LOAD DATA
     dataset = datasets.load_iris()
     data = dataset.data
@@ -55,7 +89,7 @@ if __name__ == '__main__':
                     [Xtrn.shape[1], 10, 5, 1, 5, 10, Xtrn.shape[1]]]
     }
     clf = SAE.StackedAutoEncoder([], optimizers, nepochs, batch_size, ninit, verbose=False)
-    grid = model_selection.GridSearchCV(clf, param_grid=param_grid, cv=kfold, refit=False, n_jobs=1)
+    grid = model_selection.GridSearchCV(clf, param_grid=param_grid, cv=kfold, refit=False, n_jobs=2)
     grid.fit(Xtrn, Ytrn)
     # Find the best CV
     icv = -1
