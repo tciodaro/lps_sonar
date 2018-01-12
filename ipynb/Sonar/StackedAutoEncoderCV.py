@@ -73,6 +73,11 @@ class StackedAutoEncoderCV(object):
         print 'Result: %.3f +- %.3f'%(self.mean_score,self.std_score)
         
 
+    def save(self, fname):
+        print 'Saving CV to ', fname
+        self.network.label = '-'.join([str(x) for x in self.network.hiddens])
+        print self.network.save()
+        
         
     def encode(self, data):
         return self.network.get_encoder().predict(self.scaler.transform(data))

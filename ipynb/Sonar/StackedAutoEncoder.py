@@ -13,11 +13,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 from sklearn import metrics
-
+import uuid
 
 class StackedAutoEncoder(object):
     
-    def __init__(self, hiddens = [], optimizers = [], nepochs = 500, batch_size=100, ninit = 10, verbose=False):
+    def __init__(self, hiddens = [], optimizers = [], nepochs = 500, batch_size=100, ninit = 10, verbose=False, label = ''):
         self.hiddens = hiddens
         self.optimizers = optimizers
         self.nepochs = nepochs
@@ -29,7 +29,10 @@ class StackedAutoEncoder(object):
         self.__trn_info = None
         self.__internal_nets = None
         self.verbose = verbose
-       
+        self.label = label
+        self.__fname_ref = os.path.abspath(__file__).replace(__file__,'')
+        self.__fname_ref = self.__fname_ref + '../Models/stacked-auto-encoder_' + str(uuid.uuid4())
+
     
     
     """
@@ -113,6 +116,11 @@ class StackedAutoEncoder(object):
             print 'Final Reconstruction Error (training)  : %.3e'%(score)
             print 'Training took %i s'%(time.time() - t0)
 
+    def save(self):
+        fname =  self.__fname_ref + '_' + self.label + '.ker'
+        print 'Saving models to:\n\t', fname
+        
+        return fname
         
     def encode(self, data):
         return self.__encoder.predict(data)
