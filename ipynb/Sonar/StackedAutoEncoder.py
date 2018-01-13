@@ -114,7 +114,8 @@ class StackedAutoEncoder(object):
             print 'Training took %i s'%(time.time() - t0)
 
     def save(self, fname):
-        fname =  fname + '_' + str(uuid.uuid4()) + self.label
+        #fname =  fname + '_' + str(uuid.uuid4()) + self.label
+        fname =  fname + '_' + self.label
         obj = {
             'hiddens': self.hiddens,
             'optimizers': self.optimizers,
