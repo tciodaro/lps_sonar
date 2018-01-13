@@ -30,7 +30,7 @@ batch_size = [10]
 seed = 10
 
 ########################################### LOAD DATA
-dataset = joblib.load(fname)
+dataset = joblib.load(data_file)
 data  = dataset[0]
 target= dataset[1]
 labels= dataset[2]
