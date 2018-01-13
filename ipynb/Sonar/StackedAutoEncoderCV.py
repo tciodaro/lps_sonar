@@ -99,8 +99,6 @@ class StackedAutoEncoderCV(object):
         self.network = SAE.StackedAutoEncoder(**self.grid.best_params_)
         self.network.load(fname)
         
-
-        
     def encode(self, data):
         return self.network.get_encoder().predict(self.scaler.transform(data))
     
@@ -109,7 +107,7 @@ class StackedAutoEncoderCV(object):
     
     def score(self, data, target = None):
         Y = self.predict(data)
-        return -self.network(Y, data)
+        return self.network.calculate_score(Y, data)
     
     def get_network(self):
         return self.network

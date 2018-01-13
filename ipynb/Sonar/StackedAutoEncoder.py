@@ -108,8 +108,7 @@ class StackedAutoEncoder(object):
             # Decoder part
             self.__model.add(nnet[ilayer].layers[1])
         self.__internal_nets = nnet
-        Y = self.__model.predict(data)
-        score = metrics.mean_squared_error(data, Y)
+        score = self.score(data)
         if self.verbose:
             print 'Final Reconstruction Error (training)  : %.3e'%(score)
             print 'Training took %i s'%(time.time() - t0)
@@ -156,11 +155,10 @@ class StackedAutoEncoder(object):
         return self.__model.predict(data)
     
     def score(self, data, target = None):
-        Y = self.predict(data)
-        return -metrics.mean_squared_error(Y, data)
+        return self.calculate_score(self.predict(data), data)
 
-    def metric_score(self, X, Y):
-        return metrics.mean_squared_error(Y, X)
+    def calculate_score(self, Y, X):
+        return -metrics.mean_squared_error(Y, X)  
     
     def get_params(self, deep=True):        
         return {'hiddens': self.hiddens,
