@@ -18,6 +18,7 @@ from Sonar import StackedAutoEncoderCV as SAE
 
 ########################################### CONFIGURATION
 known_classes = ['ClassA']
+fsave = '../Models/sae_' + '-'.join(known_classes) + '.jbl'
 data_file = '/home/natmourajr/Public/Marinha/Data/DadosCiodaro/4classes/lofar_data_file_fft_1024_decimation_3_spectrum_left_400.jbl'
 hidden_layers = {
     'hidden_1': np.arange(110,120,10),
@@ -73,10 +74,9 @@ for k,v in param_grid.items():
 
 cvmodel = SAE.StackedAutoEncoderCV(param_grid, 1, 2, seed)
 
-raise Exception("STOP")
 
 cvmodel.fit(Xtrn, Ytrn, nclasses)
-cvmodel.save('teste.jbl')
+cvmodel.save(fsave)
 print 'Final Score: %.2f +- %.2f'%(cvmodel.mean_score, cvmodel.std_score)
 
 ########################################## RUN NOVELTY
