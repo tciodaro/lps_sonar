@@ -20,9 +20,9 @@ from Sonar import StackedAutoEncoderCV as SAE
 known_classes = ['ClassA']
 data_file = '/home/natmourajr/Public/Marinha/Data/DadosCiodaro/4classes/lofar_data_file_fft_1024_decimation_3_spectrum_left_400.jbl'
 hidden_layers = {
-    'hidden_1': np.arange(80,120,10),
-    'hidden_2': np.arange(40,80,10),
-    'hidden_3': np.arange(20,30,2),
+    'hidden_1': np.arange(110,120,10),
+    'hidden_2': np.arange(70,80,10),
+    'hidden_3': np.arange(26,30,2),
 }
 optimizers = ['adam', 'adam','adam']
 nepochs = [10]
