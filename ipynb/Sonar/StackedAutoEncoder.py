@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 from sklearn import metrics
+from sklearn.externals import joblib
 import uuid
 
 class StackedAutoEncoder(object):
@@ -26,13 +27,10 @@ class StackedAutoEncoder(object):
             
         self.__model = None
         self.__encoder = None
-        self.__trn_info = None
+        self.trn_info = None
         self.__internal_nets = None
         self.verbose = verbose
         self.label = label
-        self.__fname_ref = os.path.abspath(__file__).replace(__file__,'')
-        self.__fname_ref = self.__fname_ref + '../Models/stacked-auto-encoder_' + str(uuid.uuid4())
-
     
     
     """
@@ -45,7 +43,7 @@ class StackedAutoEncoder(object):
         
         # Over training layers
         npairs = int((len(self.hiddens)-1)/2.0)
-        self.__trn_info = {}
+        self.trn_info = {}
         nnet   = {}
         if self.verbose:
             print 'Training %i layer pairs'%npairs
@@ -59,7 +57,7 @@ class StackedAutoEncoder(object):
                 print "\t\tActivations = tanh:%s"%('linear' if ilayer == 1 else 'tanh') # only first iteration's output is linear
             ###### Training
             # Different Initializations
-            self.__trn_info[ilayer] = None
+            self.trn_info[ilayer] = None
             best_perf = 1e9
             nnet[ilayer] = None
             for iinit in range(self.ninit):
@@ -91,11 +89,11 @@ class StackedAutoEncoder(object):
                                           shuffle=False)
                 # Get best
                 if init_trn_desc.history['loss'][-1] < best_perf:
-                    self.__trn_info[ilayer] = init_trn_desc
+                    self.trn_info[ilayer] = dict(init_trn_desc.history)
                     best_perf = init_trn_desc.history['loss'][-1]
                     nnet[ilayer] = model
             if self.verbose:
-                print '\t\tTraining Error: %.3e'%(self.__trn_info[ilayer].history['loss'][-1])
+                print '\t\tTraining Error: %.3e'%(self.trn_info[ilayer].history['loss'][-1])
             # Update input as the output of the hidden layer
             hidden_layer = backend.function([nnet[ilayer].layers[0].input],[nnet[ilayer].layers[0].output])
             X = hidden_layer([X])[0]
@@ -116,12 +114,41 @@ class StackedAutoEncoder(object):
             print 'Final Reconstruction Error (training)  : %.3e'%(score)
             print 'Training took %i s'%(time.time() - t0)
 
-    def save(self):
-        fname =  self.__fname_ref + '_' + self.label + '.ker'
-        print 'Saving models to:\n\t', fname
-        
+    def save(self, fname):
+        fname =  fname + '_' + str(uuid.uuid4()) + self.label
+        obj = {
+            'hiddens': self.hiddens,
+            'optimizers': self.optimizers,
+            'nepochs': self.nepochs,
+            'batch_size': self.batch_size,
+            'ninit': self.ninit,
+            'trn_info': self.trn_info,
+            'label': self.label,
+        }   
+        joblib.dump(obj, fname+'_info.jbl')
+        self.__model.save(fname+'_model.ker')
         return fname
         
+        
+    def load(self, fname):
+        objs = joblib.load(fname + '_info.jbl')
+        for parameter, value in objs.items():
+            setattr(self, parameter, value)
+        # Load Keras model
+        self.__model = models.load_model(fname+'_model.ker')
+        self.__encoder = models.Sequential()
+        npairs = int((len(self.hiddens)-1)/2.0)
+        self.__internal_nets = {}
+        for ilayer in range(1, npairs+1):
+            # individual trained nets
+            self.__internal_nets[ilayer] = models.Sequential()
+            self.__internal_nets[ilayer].add(self.__model.layers[ilayer-1])
+            self.__internal_nets[ilayer].add(self.__model.layers[-ilayer])
+            # Encoder
+            self.__encoder.add(self.__model.layers[ilayer-1])
+        
+
+
     def encode(self, data):
         return self.__encoder.predict(data)
     
@@ -154,10 +181,10 @@ class StackedAutoEncoder(object):
         return self.__model
     
     def plot_training_curves(self):
-        for ilayer in self.__trn_info.keys():
+        for ilayer in self.trn_info.keys():
             plt.figure()
             metric = 'loss'
-            plt.plot(self.__trn_info[ilayer].epoch, self.__trn_info[ilayer].history[metric], '-b', lw = 3, label='train')
+            plt.plot(self.trn_info[ilayer].epoch, self.trn_info[ilayer].history[metric], '-b', lw = 3, label='train')
             plt.yscale('log')
             plt.legend(loc='best')
             plt.grid()
@@ -166,7 +193,7 @@ class StackedAutoEncoder(object):
             plt.title('Net %i:%i:%i - error (training) = %.3e'%(self.__model.layers[ilayer-1].get_input_shape_at(0)[1],
                                                                 self.__model.layers[ilayer-1].get_output_shape_at(0)[1],
                                                                 self.__model.layers[ilayer-1].get_input_shape_at(0)[1],
-                                                                self.__trn_info[ilayer].history[metric][-1]))
+                                                                self.trn_info[ilayer].history[metric][-1]))
 
 
 

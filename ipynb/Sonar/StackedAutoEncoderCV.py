@@ -3,6 +3,7 @@ import time
 from sklearn import metrics
 from sklearn import model_selection
 from sklearn.pipeline import Pipeline
+from sklearn.externals import joblib
 from sklearn import preprocessing
 import numpy as np
 
@@ -11,7 +12,7 @@ from Sonar import StackedAutoEncoder as SAE
 
 class StackedAutoEncoderCV(object):
     
-    def __init__(self, grid_params, nfolds=5,njobs = 1, random_seed = None, verbose = False):
+    def __init__(self, grid_params = None, nfolds=5,njobs = 1, random_seed = None, verbose = False):
         self.grid_params = grid_params
         self.network = None
         self.grid  = None
@@ -75,9 +76,30 @@ class StackedAutoEncoderCV(object):
 
     def save(self, fname):
         print 'Saving CV to ', fname
-        self.network.label = '-'.join([str(x) for x in self.network.hiddens])
-        print self.network.save()
+        net_file = ''
+        if self.network is not None:
+            self.network.label = '-'.join([str(x) for x in self.network.hiddens])
+            net_file = self.network.save(fname)
+        objs = {}
+        for k,v in self.__dict__.items():
+            objs[k] = v
+        # Keras model cannot be saved with joblib. Save the refname from StackedAutoEncoder
+        # for later loading.
+        objs['network'] = net_file
+        joblib.dump(objs, fname, compress = 9)
         
+
+    def load(self, fname):
+        print 'Loading from ', fname
+        obj = joblib.load(fname)
+        for parameter, value in obj.items():
+            setattr(self, parameter, value)
+        # Load Keras
+        fname = self.network
+        self.network = SAE.StackedAutoEncoder(**self.grid.best_params_)
+        self.network.load(fname)
+        
+
         
     def encode(self, data):
         return self.network.get_encoder().predict(self.scaler.transform(data))
