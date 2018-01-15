@@ -7,14 +7,24 @@ from keras import layers
 from keras import optimizers
 from keras import callbacks
 from keras import backend
+from scipy import stats
 
 import matplotlib.pyplot as plt
 
 import numpy as np
 import time
 from sklearn import metrics
+from sklearn import preprocessing
 from sklearn.externals import joblib
 import uuid
+
+
+def StackedAutoEncoderScorer(clf, data, target):
+    return -clf.score(data) #Negative: gridsearch will try to make it max
+
+def StackedAutoEncoderMSE(clf, data, target):
+    Y = clf.predict(data)
+    return metrics.mean_squared_error(data, Y)
 
 class StackedAutoEncoder(object):
     
@@ -24,7 +34,7 @@ class StackedAutoEncoder(object):
         self.nepochs = nepochs
         self.batch_size = batch_size
         self.ninit=ninit
-            
+        self.__scaler = None  
         self.__model = None
         self.__encoder = None
         self.trn_info = None
@@ -36,18 +46,18 @@ class StackedAutoEncoder(object):
     """
         Fit the auto encoder to the data given
     """
-    def fit(self, data, target=None):
+    def fit(self, data, target=None, scaler = None):
         t0 = time.time()
         if self.hiddens is None or len(self.hiddens) == 0:
             raise Exception('StackedAutoEncoder: hidden layers parameter not set')
-        
         # Over training layers
         npairs = int((len(self.hiddens)-1)/2.0)
         self.trn_info = {}
         nnet   = {}
         if self.verbose:
             print 'Training %i layer pairs'%npairs
-        X = data
+        self.scaler = preprocessing.StandardScaler()
+        X = self.scaler.fit_transform(data)
         for ilayer in range(1, npairs+1):
             if self.verbose:
                 print "\tLayer pair %i"%(ilayer)
@@ -124,6 +134,7 @@ class StackedAutoEncoder(object):
             'ninit': self.ninit,
             'trn_info': self.trn_info,
             'label': self.label,
+            'scaler': self.scaler
         }   
         joblib.dump(obj, fname+'_info.jbl')
         self.__model.save(fname+'_model.ker')
@@ -150,16 +161,17 @@ class StackedAutoEncoder(object):
 
 
     def encode(self, data):
-        return self.__encoder.predict(data)
+        return self.__encoder.predict(self.scaler.transform(data))
     
     def predict(self, data):
-        return self.__model.predict(data)
+        Y = self.__model.predict(self.scaler.transform(data))
+        return self.scaler.inverse_transform(Y)
     
     def score(self, data, target = None):
         return self.calculate_score(self.predict(data), data)
 
     def calculate_score(self, Y, X):
-        return -metrics.mean_squared_error(Y, X)  
+        return np.mean(stats.entropy(X.T,Y.T)) # KL Divergence
     
     def get_params(self, deep=True):        
         return {'hiddens': self.hiddens,

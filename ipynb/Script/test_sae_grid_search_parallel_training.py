@@ -37,11 +37,11 @@ if __name__ == '__main__':
         'hiddens': [[Xtrn.shape[1], 10, 5, 2, 5, 10, Xtrn.shape[1]],
                     [Xtrn.shape[1], 10, 5, 1, 5, 10, Xtrn.shape[1]]],
         'optimizers': [['adam','adam','adam']],
-        'nepochs': [500],
+        'nepochs': [100],
         'batch_size': [100],
         'ninit': [1]
     }
-    cvmodel = SAE.StackedAutoEncoderCV(param_grid, 1, 2)
+    cvmodel = SAE.StackedAutoEncoderCV(param_grid, 4, 2)
     cvmodel.fit(Xtrn, Ytrn, nclasses)
     cvmodel.save('teste.jbl')
 
