@@ -63,11 +63,11 @@ class StackedAutoEncoderCV(object):
         # Fix parameter names
         self.best_params = dict([(k.replace('network__',''), v) for k,v in grid.best_params_.items()])
         self.results = grid.cv_results_
-        self.best_index = grid.best_index
+        self.best_index = grid.best_index_
         self.network = SAE.StackedAutoEncoder(**self.best_params)
         self.network.fit(data[self.cv_indexes[icv]['itrn']], target[self.cv_indexes[icv]['itrn']])
-        self.mean_score = self.grid.cv_results_['mean_test_kl_div'][self.grid.best_index_]
-        self.std_score = self.grid.cv_results_['std_test_kl_div'][self.grid.best_index_]
+        self.mean_score = grid.cv_results_['mean_test_kl_div'][grid.best_index_]
+        self.std_score = grid.cv_results_['std_test_kl_div'][grid.best_index_]
         print 'Total time: ', time.time()-t0
         print 'Result: %.3f +- %.3f'%(self.mean_score,self.std_score)
         
@@ -94,7 +94,7 @@ class StackedAutoEncoderCV(object):
             setattr(self, parameter, value)
         # Load Keras
         fname = self.network
-        self.network = SAE.StackedAutoEncoder(**self.grid.best_params_)
+        self.network = SAE.StackedAutoEncoder(**self.best_params)
         self.network.load(fname)
         
     def encode(self, data):
