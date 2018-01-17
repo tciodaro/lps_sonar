@@ -12,6 +12,10 @@ np.set_printoptions(3)
 
 sys.path.append('../')
 
+
+import os
+os.environ['MPLBACKEND'] = 'module://webagg'
+
 from Sonar import StackedAutoEncoderCV as SAE
 
 
@@ -54,16 +58,18 @@ nclasses = np.unique(target).shape[0]
 ntrn = 0.8
 Xtrn, Xtst, Ytrn, Ytst = model_selection.train_test_split(data, target, test_size = 1.0-ntrn,
                                                           stratify=target, random_state = seed)
+Xtrn = Xtrn[:10]
+Ytrn = Ytrn[:10]
 
 ########################################## GRID-SEARCH
-hiddens = [(Xtrn.shape[0],) + x + (Xtrn.shape[0],) for x in itertools.product(*hidden_layers.values())]
+hiddens = [(Xtrn.shape[1],) + x + x[::-1][1:] + (Xtrn.shape[1],) for x in itertools.product(*hidden_layers.values())]
 
 
 param_grid = {
     'hiddens': hiddens,
     'optimizers': [['adam','adam','adam']],
-    'nepochs': [500],
-    'batch_size': [100],
+    'nepochs': [10],
+    'batch_size': [10],
     'ninit': [1]
 }
 
