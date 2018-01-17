@@ -9,8 +9,6 @@ from keras import callbacks
 from keras import backend
 from scipy import stats
 
-import matplotlib.pyplot as plt
-
 import numpy as np
 import time
 from sklearn import metrics
@@ -191,20 +189,7 @@ class StackedAutoEncoder(object):
     def get_auto_encoder(self):
         return self.__model
     
-    def plot_training_curves(self):
-        for ilayer in self.trn_info.keys():
-            plt.figure()
-            metric = 'loss'
-            plt.plot(self.trn_info[ilayer].epoch, self.trn_info[ilayer].history[metric], '-b', lw = 3, label='train')
-            plt.yscale('log')
-            plt.legend(loc='best')
-            plt.grid()
-            plt.xlabel('Epochs')
-            plt.ylabel('Mean Squared Error')
-            plt.title('Net %i:%i:%i - error (training) = %.3e'%(self.__model.layers[ilayer-1].get_input_shape_at(0)[1],
-                                                                self.__model.layers[ilayer-1].get_output_shape_at(0)[1],
-                                                                self.__model.layers[ilayer-1].get_input_shape_at(0)[1],
-                                                                self.trn_info[ilayer].history[metric][-1]))
+    
 
 
 
