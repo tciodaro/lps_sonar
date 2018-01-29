@@ -20,46 +20,33 @@ if __name__ == '__main__':
     target = dataset.target
 
     ########################################### SELECT ONE CLASS
-    knowncls = 1
+    knowncls = 2
     data   = data[target == knowncls]
     target = target[target == knowncls]
     nclasses = np.unique(target).shape[0]
-
+    cls_name = dataset['target_names'][knowncls]
     ########################################### TRAINING INDEXES
     
     # Test x Development
+    seed = 10
     ntrn = 0.7
-    Xtrn, Xtst, Ytrn, Ytst = model_selection.train_test_split(data, target, test_size = 1.0-ntrn, stratify=target)
+    Xtrn, Xtst, Ytrn, Ytst = model_selection.train_test_split(data, target, test_size = 1.0-ntrn, stratify=target,
+                                                              random_state = seed)
     
     
     ########################################## GRID-SEARCH
     param_grid = {
-        'hiddens': [[Xtrn.shape[1], 10, 5, 2, 5, 10, Xtrn.shape[1]],
-                    [Xtrn.shape[1], 10, 5, 1, 5, 10, Xtrn.shape[1]]],
+        'hiddens': [[Xtrn.shape[1], 10, 5, 2, 5, 10, Xtrn.shape[1]] ],
         'optimizers': [['adam','adam','adam']],
         'nepochs': [100],
         'batch_size': [100],
-        'ninit': [1]
+        'ninit': [10]
     }
-    cvmodel = SAE.StackedAutoEncoderCV(param_grid, 4, 2)
+    cvmodel = SAE.StackedAutoEncoderCV(param_grid, nfolds=5, njobs = 4, random_seed = seed)
     cvmodel.fit(Xtrn, Ytrn, nclasses)
-    cvmodel.save('teste.jbl')
+    cvmodel.save('../Models/iris_sae_' + cls_name + '.jbl')
 
-    print cvmodel.network.trn_info[1]['loss'][-1]
-
-    loaded_model = SAE.StackedAutoEncoderCV()
-    loaded_model.load('teste.jbl')
-    print loaded_model.network.trn_info[1]['loss'][-1]
-
-
-    # Compare
-    print cvmodel.mean_score
-    print loaded_model.mean_score
-
-
-
-    raise Exception('STOP')
-    
+        
     
 
 
