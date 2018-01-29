@@ -169,7 +169,11 @@ class StackedAutoEncoder(object):
         return self.calculate_score(self.predict(data), data)
 
     def calculate_score(self, Y, X):
-        return np.mean(stats.entropy(X.T,Y.T)) # KL Divergence
+        X = (X.T / np.sum(X, 1)).T
+        Y = (Y.T / np.sum(Y, 1)).T
+        X = (X.T - np.min(X, 1)).T
+        Y = (Y.T - np.min(Y, 1)).T
+        return np.mean(stats.entropy(X.T + 1e-9,Y.T + 1e-9)) # KL Divergence
     
     def get_params(self, deep=True):        
         return {'hiddens': self.hiddens,
