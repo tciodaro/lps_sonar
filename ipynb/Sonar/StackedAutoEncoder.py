@@ -31,8 +31,7 @@ class StackedAutoEncoder(object):
         self.optimizers = optimizers
         self.nepochs = nepochs
         self.batch_size = batch_size
-        self.ninit=ninit
-        self.__scaler = None  
+        self.ninit=ninit 
         self.__model = None
         self.__encoder = None
         self.trn_info = None
@@ -44,7 +43,7 @@ class StackedAutoEncoder(object):
     """
         Fit the auto encoder to the data given
     """
-    def fit(self, data, target=None, scaler = None):
+    def fit(self, data, target=None):
         t0 = time.time()
         if self.hiddens is None or len(self.hiddens) == 0:
             raise Exception('StackedAutoEncoder: hidden layers parameter not set')
@@ -54,8 +53,8 @@ class StackedAutoEncoder(object):
         nnet   = {}
         if self.verbose:
             print 'Training %i layer pairs'%npairs
-        self.scaler = preprocessing.StandardScaler()
-        X = self.scaler.fit_transform(data)
+        scaler = preprocessing.StandardScaler()
+        X = scaler.fit_transform(data)
         for ilayer in range(1, npairs+1):
             if self.verbose:
                 print "\tLayer pair %i"%(ilayer)
@@ -105,6 +104,17 @@ class StackedAutoEncoder(object):
             # Update input as the output of the hidden layer
             hidden_layer = backend.function([nnet[ilayer].layers[0].input],[nnet[ilayer].layers[0].output])
             X = hidden_layer([X])[0]
+        # Absorb scaling
+        s = scaler.scale_
+        m = scaler.mean_
+        # Input
+        W = nnet[1].layers[0].get_weights()[0]
+        B = nnet[1].layers[0].get_weights()[1]
+        nnet[1].layers[0].set_weights( (W / s.reshape((s.shape[0],1)), B - np.dot(W.T,(m/s))))
+        # Output
+        W = nnet[1].layers[-1].get_weights()[0]
+        B = nnet[1].layers[-1].get_weights()[1]
+        nnet[1].layers[-1].set_weights((W * s, B*s + m))
         # Put together final model
         self.__model = models.Sequential()
         self.__encoder = models.Sequential()
@@ -131,8 +141,7 @@ class StackedAutoEncoder(object):
             'batch_size': self.batch_size,
             'ninit': self.ninit,
             'trn_info': self.trn_info,
-            'label': self.label,
-            'scaler': self.scaler
+            'label': self.label
         }   
         joblib.dump(obj, fname+'_info.jbl')
         self.__model.save(fname+'_model.ker')
@@ -159,11 +168,11 @@ class StackedAutoEncoder(object):
 
 
     def encode(self, data):
-        return self.__encoder.predict(self.scaler.transform(data))
+        return self.__encoder.predict(data)
     
     def predict(self, data):
-        Y = self.__model.predict(self.scaler.transform(data))
-        return self.scaler.inverse_transform(Y)
+        Y = self.__model.predict(data)
+        return Y
     
     def score(self, data, target = None):
         return self.calculate_score(self.predict(data), data)
