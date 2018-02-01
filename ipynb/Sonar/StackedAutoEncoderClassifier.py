@@ -16,23 +16,37 @@ from sklearn import preprocessing
 from sklearn.externals import joblib
 from scipy.stats import mstats
 
+from Sonar import StackedAutoEncoderCV as SAE
+
 
 def SPScorer(clf, data, target):
     Y = clf.predict(data)
-    if Y.shape[1] > 1:
-        Y = np.argmax(Y, axis=1)
-        T = np.argmax(target, axis=1)
-        effs = np.zeros(target.shape[1])
-        for cls in range(target.shape[1]):
-            effs[cls] = float((Y[T==cls]==cls).sum()) / (T==cls).sum()
-    else:
+    if np.unique(target).shape[0] == 2:
         Y = Y > 0
-        T = T > 0
-        effs = np.zeros(2)
-        effs[0] = float(Y[~T].sum()) / (~T).sum()
-        effs[1] = float(Y[ T].sum()) / ( T).sum()
+    else:    
+        Y = np.argmax(Y, axis=1)
+    effs = np.zeros(np.unique(target).shape[0])
+    for cls in range(np.unique(target).shape[0]):
+        effs[cls] = float((Y[target==cls]==cls).sum()) / (target==cls).sum()
     
     return mstats.gmean([mstats.gmean(effs), np.mean(effs)])
+
+
+def PrecisionScorer(clf, data, target):
+    Y = clf.predict(data)
+    if np.unique(target).shape[0] == 2:
+        Y = Y > 0
+    else:    
+        Y = np.argmax(Y, axis=1)
+    return metrics.precision_score(target, Y, average='weighted')
+
+def RecallScorer(clf, data, target):
+    Y = clf.predict(data)
+    if np.unique(target).shape[0] == 2:
+        Y = Y > 0
+    else:    
+        Y = np.argmax(Y, axis=1)
+    return metrics.recall_score(target, Y, average='weighted')
 
 
 class StackedAutoEncoderClassifier(object):
@@ -47,29 +61,33 @@ class StackedAutoEncoderClassifier(object):
         self.trn_info = None
         self.verbose = verbose
         self.label = label
-        self.encoders = {}
-    
-    """
-        Set the encoders for each known class
-    """
-    def set_encoders(self, encoders):
-        self.encoders = encoders
-    
-    
+        
+
+
     """
         Fit the classifier
     """
-    def fit(self, data, target):
+    def fit(self, data, target, encoders):
         t0 = time.time()
         if self.hidden is None or self.hidden == 0:
             raise Exception('StackedAutoEncoderClassifier: hidden layers parameter not set')
         best_perf = 1e9
+        # One hot encoding
+        if np.unique(target).shape[0] == 2:
+            one_hot_target = np.ones([target.shape[0],1])
+            one_hot_target[target == np.unique(target)[0], 0] = -1
+        else:
+            one_hot_target = -np.ones([target.shape[0], np.unique(target).shape[0]])
+            for i, cls in enumerate(np.unique(target)):
+                one_hot_target[target == cls, i] = 1
+        target = one_hot_target                
+        # Different initializations
         for iinit in range(self.ninit):
             common_input = layers.Input(shape = [data.shape[1]])
             graphs = []
-            for cls in self.encoders.keys():
+            for cls in encoders.keys():
                 gr = common_input
-                for lay in self.encoders[cls].layers:
+                for lay in encoders[cls].layers:
                     lay.name = 'class_'+ cls + lay.name
                     lay.trainable = False
                     gr = lay(gr)
@@ -92,7 +110,6 @@ class StackedAutoEncoderClassifier(object):
                                           batch_size = self.batch_size,
                                           verbose = False,
                                           shuffle = False)
-            print init_trn_desc.history.keys()
             if init_trn_desc.history['loss'][-1] < best_perf:
                     self.trn_info = dict(init_trn_desc.history)
                     self.trn_info['epochs'] = init_trn_desc.epoch
